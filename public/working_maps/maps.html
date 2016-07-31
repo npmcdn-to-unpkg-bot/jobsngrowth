@@ -1,0 +1,407 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D3 Hello World</title>
+
+
+  	<style>
+
+    body { font: 12px Arial;}
+
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: grey;
+        stroke-width: 1;
+        shape-rendering: crispEdges;
+    }
+
+
+  		#map {
+
+  			height: 500px;
+  		}
+
+  		.info {
+  			padding: 6px 8px;
+  			font: 14px/16px Arial, Helvetica, sans-serif;
+  			background: white;
+  			background: rgba(255,255,255,0.8);
+  			box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  			border-radius: 5px;
+  		}
+  		.info h4 {
+  			margin: 0 0 5px;
+  			color: #777;
+  		}
+
+
+      div.tooltip {
+        position: absolute;
+        text-align: center;
+         width: 80px;
+          border-radius: 8px;
+        pointer-events: none;
+        background: lightpink;
+        paddin: 5px;
+        padding-bottom: 10px;
+
+    }
+  	</style>
+    <link rel="stylesheet" href="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.css" />
+    <script src="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.js"></script>
+    <script src="//d3js.org/d3.v4.min.js"></script>
+
+ </head>
+<body>
+<h1>Labour Market Areas </h1>
+<div id="map"></div>
+<svg width="960" height="500"></svg>
+
+<script type="text/javascript" src="LFA.js"></script>
+<script type="text/javascript" src="jobflows.js"></script>
+
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="d3.legend.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+<script type="text/javascript">
+ 		var map = L.map('map').setView([-24.974072, 135.1950], 4);
+
+    		L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGJlaGx1bCIsImEiOiJjaXI4cGE0ODEwMHg1Z2NtMzk1Z3FsemcwIn0.vLJHlwVQ3ykakyExeaVxjg', {
+    			maxZoom: 18,
+    			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+    				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+    				'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    			id: 'mapbox.light'
+    		}).addTo(map);
+
+
+    		// control that shows state info on hover
+    		var info = L.control();
+
+    		info.onAdd = function (map) {
+    			this._div = L.DomUtil.create('div', 'info');
+    			this.update();
+    			return this._div;
+    		};
+
+
+      function getAllIndexes(val) {
+      var indexes = [], i;
+      for(i = 0; i < FT.length; i++){
+
+          if (FT[i].ESA_Code == val){
+              indexes.push(i);
+
+            }
+          }
+         return indexes;
+           }
+
+        for(i = 0; i < statesData.features.length; i++) {
+         var indexes = getAllIndexes(statesData.features[i].properties.ESA_CODE);
+         for(j=0;j<indexes.length;j++){
+         statesData.features[i].properties[FT[indexes[j]].abb+"J"]=FT[indexes[j]].jobs;
+         statesData.features[i].properties[FT[indexes[j]].abb+"T"]=FT[indexes[j]].title;
+
+        }
+        if(indexes.length>0){
+         statesData.features[i].properties["location"]=FT[indexes[0]].location;
+       }
+       }
+
+
+
+		info.update = function (props) {
+			this._div.innerHTML = '<h4>Australian Jobs in ' +  (props ?
+				 props.location + '<h4><b>' + props.TotlT+ '</b><br />' + props.TotlJ : 'ESA. Hover over an ESA.');
+		};
+
+		info.addTo(map);
+
+    function getColor(d) {
+
+return d > 150 ? "#FF0000" :
+ d > 130 ? "#FF3300" :
+ d > 110 ? "#ff6600" :
+ d > 90 ?  "#ff9900" :
+ d > 70 ? "#FFCC00"  :
+ d > 50 ? "#FFFF00"  :
+ d > 40 ? "#ccff00" :
+ d > 30 ? "#99ff00" :
+ d > 20 ? "#66ff00" :
+ d > 10 ? "#33ff00" :
+          "#00FF00" ;
+
+    		}
+
+        function style(feature) {
+  			return {
+  				weight: 1,
+  				opacity: 1,
+  				color: 'black',
+  				dashArray: '1',
+  				fillOpacity: 0.3,
+  				fillColor: getColor(feature.properties.TotlJ)
+  			};
+  		}
+
+  		function highlightFeature(e) {
+  			var layer = e.target;
+
+  			layer.setStyle({
+  				weight: 5,
+  				color: '#666',
+  				dashArray: '',
+  				fillOpacity: 0.7
+  			});
+
+  			if (!L.Browser.ie && !L.Browser.opera) {
+  				layer.bringToFront();
+  			}
+
+  			info.update(layer.feature.properties);
+  		}
+
+
+		var geojson;
+
+		function resetHighlight(e) {
+			geojson.resetStyle(e.target);
+			info.update();
+		}
+
+		function zoomToFeature(e) {
+			map.fitBounds(e.target.getBounds());
+		}
+
+		function onEachFeature(feature, layer) {
+			layer.on({
+				mouseover: highlightFeature,
+				mouseout: resetHighlight,
+				click: zoomToFeature
+			});
+		}
+
+		geojson = L.geoJson(statesData, {
+			style: style,
+			onEachFeature: onEachFeature
+		}).addTo(map);
+
+
+
+   </script>
+
+   <script>
+
+   // Set the dimensions of the canvas / graph
+   var margin = {top: 30, right: 20, bottom: 30, left: 50},
+       width = 800 - margin.left - margin.right,
+       height = 270 - margin.top - margin.bottom;
+
+   // Parse the date / time
+   var parseDate = d3.time.format("%Y").parse;
+
+   // Set the ranges
+   var x = d3.time.scale().range([0, width-250]);
+   var y = d3.scale.linear().range([height, 0]);
+
+   // Define the axes
+   var xAxis = d3.svg.axis().scale(x)
+       .orient("bottom").ticks(5);
+
+   var yAxis = d3.svg.axis().scale(y)
+       .orient("left").ticks(5);
+
+   // Define the line
+   var jobline = d3.svg.line()
+       .x(function(d) { return x(d.year); })
+       .y(function(d) { return y(d.jobs); });
+
+
+       var div = d3.select("body").append("div")
+           .attr("class", "tooltip")
+           .style("opacity", 0);
+
+
+   // Adds the svg canvas
+   var svg = d3.select("body")
+       .append("svg")
+           .attr("width", width + margin.left + margin.right)
+           .attr("height", height + margin.top + margin.bottom)
+       .append("g")
+           .attr("transform",
+                 "translate(" + margin.left + "," + margin.top + ")");
+
+        var color = d3.scale.category10();
+   // Get the data
+
+     var ESA_code="1";
+
+
+
+    d3.csv("JF.csv", function(error, data) {
+
+
+     data = data.filter(function(row) {
+       return row['ESA_Code'] == ESA_code &&  row['Code'] != "0";
+     });
+
+
+
+    data.forEach(function(d) {
+    d.year = parseDate(d.year);
+    d.jobs = +d.jobs;
+            });
+
+
+            var vals = [];
+
+            var ocs = [];
+
+
+            for(i=0;i<data.length;i++){
+            if(data[i].year.getFullYear()== 2015){
+               vals.push(data[i].jobs);
+               ocs.push(data[i].Code);
+             }}
+
+             var vals2 = vals;
+
+             vals2.sort();
+
+             vals2=vals2.slice(Math.max(vals2.length - 10, 1));
+
+             vals2=vals2[0];
+
+             var indexocs=[];
+
+             for(i=0;i<vals.length;i++){
+               if(vals[i]>=vals2){
+                 indexocs.push(ocs[i]);
+               }
+             }
+
+             data = data.filter(function(row) {
+                return  indexocs.indexOf(row['Code'])>=0;
+             });
+
+
+
+
+       // Scale the range of the data
+       x.domain(d3.extent(data, function(d) { return d.year; }));
+       y.domain([0, d3.max(data, function(d) { return d.jobs; })]);
+         // Nest the entries by symbol
+       var dataNest = d3.nest()
+           .key(function(d) {
+             return d.abb ;})
+           .entries(data);
+
+
+
+       // Loop through each symbol / key
+       dataNest.forEach(function(d) {
+
+           svg.append("path")
+               .attr("class", "line")
+               .style("stroke", function() {
+                return d.color = color(d.key); })
+              .attr("d", jobline(d.values))
+              .style("fill","none")
+              .style("stroke-width","3")
+              .style("stroke-dasharray","0");
+
+
+
+       });
+
+       // Add the X Axis
+       svg.append("g")
+           .attr("class", "x axis")
+           .attr("transform", "translate(0," + height + ")")
+           .call(xAxis)
+           .style("stroke-width","2");
+
+       // Add the Y Axis
+       svg.append("g")
+           .attr("class", "y axis")
+           .call(yAxis)
+           .style("stroke-width","2");
+
+           svg.append("text")
+         .attr("class", "y label")
+         .attr("text-anchor", "end")
+         .attr("y", 6)
+         .attr("dy", ".75em")
+         .attr("transform", "rotate(-90)")
+         .text("Jobs Ads (Index)");
+
+         svg.append("text")      // text label for the x axis
+                 .attr("x", 265 )
+                 .attr("y",  0 )
+                 .style("text-anchor", "middle")
+                 .text("Hover over line to see occupation.");
+
+
+
+ /*
+           var legend = svg.append("g")
+           	  .attr("class", "legend")
+           	  .attr("x", width - 300)
+           	  .attr("y", 25)
+           	  .attr("height", 100)
+           	  .attr("width", 300);
+
+           	legend.selectAll('g').data(data)
+                 .enter()
+                 .append('g')
+                 .each(function(d, i) {
+                   var g = d3.select(this);
+                   g.append("rect")
+                     .attr("x", width -200)
+                     .attr("y", i*25)
+                     .attr("width", 10)
+                     .attr("height", 10)
+                     .style("fill", function() {
+                      return d.color = color(d.title); });
+
+                   g.append("text")
+                     .attr("x", width -180)
+                     .attr("y", i * 25 + 8)
+                     .attr("height",30)
+                     .attr("width",200)
+                     .style("fill", function() {
+                      return d.color = color(d.title); })
+                      .text(function() {
+                      return d.text = d.title; });
+*/
+                      svg.selectAll("path")
+                      .data(data)
+                      .on("mouseover", function(d) {
+                        div.transition()
+                        .duration(200)
+                        .style("opacity", 1);
+                        div	.html("<br/>"  + d.title )
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px");
+                        })
+                       .on("mouseout", function(d) {
+                         div.transition()
+                         .duration(500)
+                         .style("opacity", 0);
+                        });
+
+
+
+
+
+   });
+
+   </script>
+
+</script>
+
+
+</body>
+</html>
