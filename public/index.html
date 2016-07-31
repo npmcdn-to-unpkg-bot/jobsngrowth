@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html ng-app="demoapp">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/angular-route.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/angular-leaflet-directive.js"></script>
+    <script type="text/javascript" src="js/jobflowswages.js"></script>
+
+
+    <link rel="stylesheet" href="external/dist/css/bootstrap.css"/>
+    <link rel="stylesheet" href="css/style-usa.css" />
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css"/>
+    <script>
+        var app = angular.module('demoapp', ['leaflet-directive', 'ngRoute']);
+
+        app.run(function($rootScope) {
+            if(!$rootScope.selectedOccupationCode) {
+                $rootScope.selectedOccupationCode = "FaFM";
+            }
+            if(!$rootScope.selectedRegionCode) {
+                $rootScope.selectedRegionCode = "3";
+            }
+
+            $rootScope.regionsByOccupationData = [];
+            for(var i = 0; i < jobflowswages.length; i++) {
+                if($rootScope.selectedOccupationCode === jobflowswages[i].abb) {
+                    $rootScope.regionsByOccupationData.push(jobflowswages[i]);
+                }
+            }
+
+            $rootScope.occupationsByRegionData = [];
+            for(var i = 0; i < jobflowswages.length; i++) {
+                if($rootScope.selectedRegionCode === jobflowswages[i].esa_code) {
+                    $rootScope.occupationsByRegionData.push(jobflowswages[i]);
+                }
+            }
+        });
+
+        app.controller('BasicCenterController', [ '$rootScope', '$scope', '$route', function($rootScope, $scope, $route, $window, $location) {
+            angular.extend($scope, {
+                australis: {
+                    lat: -28.866502526926897,
+                    lng: 134.5825195312509,
+                    zoom: 4
+                },
+                occupations: [
+                    {"title": "Chief Executives, General Managers and Legislators", "abb": "CEGMaL"},
+                    {"title": "Farmers and Farm Managers", "abb": "FaFM"},
+                    {"title": "Specialist Managers", "abb": "SpcM"},
+                    {"title": "Hospitality, Retail and Service Managers", "abb": "HRaSM"},
+                    {"title": "Arts and Media Professionals", "abb": "AaMP"},
+                    {"title": "Business, Human Resource and Marketing Professionals", "abb": "BHRaMP"},
+                    {"title": "Design, Engineering, Science and Transport Professionals", "abb": "DESaTP"},
+                    {"title": "Education Professionals", "abb": "EdcP"},
+                    {"title": "Health Professionals", "abb": "HltP"},
+                    {"title": "ICT Professionals", "abb": "ICTP"},
+                    {"title": "Legal, Social and Welfare Professionals", "abb": "LSaWP"},
+                    {"title": "Engineering, ICT and Science Technicians", "abb":  "EIaST"},
+                    {"title": "Automotive and Engineering Trades Workers", "abb":  "AaETW"},
+                    {"title": "Construction Trades Workers", "abb": "CnTW"},
+                    {"title": "Electrotechnology and Telecommunications Trades Workers", "abb":  "EaTTW"},
+                    {"title": "Food Trades Workers", "abb": "FdTW"},
+                    {"title": "Skilled Animal and Horticultural Workers", "abb": "SAaHW"},
+                    {"title": "Other Technicians and Trades Workers", "abb":  "OTaTW"},
+                    {"title": "Health and Welfare Support Workers", "abb": "HaWSW"},
+                    {"title": "Carers and Aides", "abb": "CraA"},
+                    {"title": "Hospitality Workers", "abb": "HspW"},
+                    {"title": "Protective Service Workers", "abb": "PrSW"},
+                    {"title": "Sports and Personal Service Workers", "abb": "SaPSW"},
+                    {"title": "Office Managers and Program Administrators", "abb": "OMaPA"},
+                    {"title": "Personal Assistants and Secretaries", "abb":  "PAaS"},
+                    {"title": "General Clerical Workers", "abb":  "GnCW"},
+                    {"title": "Inquiry Clerks and Receptionists", "abb":  "ICaR"},
+                    {"title": "Numerical Clerks", "abb": "NmrC"},
+                    {"title": "Clerical and Office Support Workers", "abb":  "CaOSW"},
+                    {"title": "Other Clerical and Administrative Workers", "abb":  "OCaAW"},
+                    {"title": "Sales Representatives and Agents", "abb": "SRaA"},
+                    {"title": "Sales Assistants and Salespersons", "abb": "SAaS"},
+                    {"title": "Sales Support Workers", "abb":  "SlSW"},
+                    {"title": "Machine and Stationary Plant Operators", "abb":  "MaSPO"},
+                    {"title": "Mobile Plant Operators", "abb":  "MbPO"},
+                    {"title": "Road and Rail Drivers", "abb":  "RaRD"},
+                    {"title": "Storepersons", "abb":  "Strp"},
+                    {"title": "Cleaners and Laundry Workers", "abb":  "CaLW"},
+                    {"title": "Construction and Mining Labourers", "abb":  "CaML"},
+                    {"title": "Factory Process Workers", "abb":  "FcPW"},
+                    {"title": "Farm, Forestry and Garden Workers", "abb":  "FFaGW"},
+                    {"title": "Food Preparation Assistants", "abb":  "FdPA"},
+                    {"title": "Other Labourers", "abb":  "OthL"}
+                ],
+                esas: [
+                    {"code": "1", "esa_code": "4ACQ", "esa_name": "ACT/Queanbeyan"},
+                    {"code": "2", "esa_code": "4CAB", "esa_name": "Canterbury/Bankstown"},
+                    {"code": "3", "esa_code": "4CEC", "esa_name": "Central Coast"},
+                    {"code": "4", "esa_code": "4CWS", "esa_name": "Central Western Sydney"},
+                    {"code": "5", "esa_code": "4CHI", "esa_name": "Chifley"},
+                    {"code": "6", "esa_code": "4CLA", "esa_name": "Clarence"},
+                    {"code": "7", "esa_code": "4COH", "esa_name": "Coffs Harbour"},
+                    {"code": "8", "esa_code": "4ESU", "esa_name": "Eastern Suburbs"},
+                    {"code": "9", "esa_code": "4EUO", "esa_name": "Eurobodalla"},
+                    {"code": "10", "esa_code": "4FAI", "esa_name": "Fairfield"},
+                    {"code": "11", "esa_code": "4FAW", "esa_name": "Far West"},
+                    {"code": "12", "esa_code": "4GWN", "esa_name": "Gwydir Namoi"},
+                    {"code": "13", "esa_code": "4HAS", "esa_name": "Hastings"},
+                    {"code": "14", "esa_code": "4HUT", "esa_name": "Hunter"},
+                    {"code": "15", "esa_code": "4INS", "esa_name": "Inner Sydney"},
+                    {"code": "16", "esa_code": "4INW", "esa_name": "Inner Western Sydney"},
+                    {"code": "17", "esa_code": "4KEE", "esa_name": "Keepit"},
+                    {"code": "18", "esa_code": "4LAC", "esa_name": "Lachlan"},
+                    {"code": "19", "esa_code": "4LIV", "esa_name": "Liverpool"},
+                    {"code": "20", "esa_code": "4LOH", "esa_name": "Lower Hunter"},
+                    {"code": "21", "esa_code": "4LSC", "esa_name": "Lower South Coast"},
+                    {"code": "22", "esa_code": "4MAC", "esa_name": "Macarthur"},
+                    {"code": "23", "esa_code": "4MAL", "esa_name": "Macleay"},
+                    {"code": "24", "esa_code": "4MAN", "esa_name": "Manning"},
+                    {"code": "25", "esa_code": "4MUD", "esa_name": "Murray Darling"},
+                    {"code": "26", "esa_code": "4NEP", "esa_name": "Nepean"},
+                    {"code": "27", "esa_code": "4NEE", "esa_name": "New England"},
+                    {"code": "28", "esa_code": "4NOC", "esa_name": "North Coast"},
+                    {"code": "29", "esa_code": "4NOS", "esa_name": "Northern Sydney"},
+                    {"code": "30", "esa_code": "4ORA", "esa_name": "Orana"},
+                    {"code": "31", "esa_code": "4OWS", "esa_name": "Outer Western Sydney"},
+                    {"code": "32", "esa_code": "4OXL", "esa_name": "Oxley"},
+                    {"code": "33", "esa_code": "4PAT", "esa_name": "Patterson"},
+                    {"code": "34", "esa_code": "4RIC", "esa_name": "Richmond"},
+                    {"code": "35", "esa_code": "4SHO", "esa_name": "Shoalhaven"},
+                    {"code": "36", "esa_code": "4SOE", "esa_name": "South Eastern"},
+                    {"code": "37", "esa_code": "4SOR", "esa_name": "Southern Ranges"},
+                    {"code": "38", "esa_code": "4SGS", "esa_name": "St George-Sutherland"},
+                    {"code": "39", "esa_code": "4STU", "esa_name": "Sturt"},
+                    {"code": "40", "esa_code": "4TWE", "esa_name": "Tweed"},
+                    {"code": "41", "esa_code": "4UPH", "esa_name": "Upper Hunter"},
+                    {"code": "42", "esa_code": "4WIN", "esa_name": "Windamere"},
+                    {"code": "43", "esa_code": "4WOL", "esa_name": "Wollongong"},
+                    {"code": "44", "esa_code": "4BAY", "esa_name": "Bayside"},
+                    {"code": "45", "esa_code": "4BEN", "esa_name": "Bendigo"},
+                    {"code": "46", "esa_code": "4CAL", "esa_name": "Calder"},
+                    {"code": "47", "esa_code": "4EAG", "esa_name": "East Gippsland"},
+                    {"code": "48", "esa_code": "4EUR", "esa_name": "Eureka"},
+                    {"code": "49", "esa_code": "4GEE", "esa_name": "Geelong"},
+                    {"code": "50", "esa_code": "4GOV", "esa_name": "Goulburn Valley"},
+                    {"code": "51", "esa_code": "4GRA", "esa_name": "Grampians"},
+                    {"code": "52", "esa_code": "4HAM", "esa_name": "Hampden"},
+                    {"code": "53", "esa_code": "4KIE", "esa_name": "Kiewa"},
+                    {"code": "54", "esa_code": "4LAV", "esa_name": "Latrobe Valley"},
+                    {"code": "55", "esa_code": "4MAO", "esa_name": "Maroondah"},
+                    {"code": "56", "esa_code": "4MIM", "esa_name": "Mid Murray"},
+                    {"code": "57", "esa_code": "4MON", "esa_name": "Monash"},
+                    {"code": "58", "esa_code": "4OVE", "esa_name": "Ovens"},
+                    {"code": "59", "esa_code": "4PEN", "esa_name": "Peninsula"},
+                    {"code": "60", "esa_code": "4PLE", "esa_name": "Plenty"},
+                    {"code": "61", "esa_code": "4SUN", "esa_name": "Sunraysia"},
+                    {"code": "62", "esa_code": "4WED", "esa_name": "Western District"},
+                    {"code": "63", "esa_code": "4WES", "esa_name": "Westgate"},
+                    {"code": "64", "esa_code": "4YAR", "esa_name": "Yarra"},
+                    {"code": "65", "esa_code": "4BUN", "esa_name": "Bundaberg"},
+                    {"code": "66", "esa_code": "4CAI", "esa_name": "Cairns"},
+                    {"code": "67", "esa_code": "4CAP", "esa_name": "Capricornia"},
+                    {"code": "68", "esa_code": "4FAN", "esa_name": "Far North"},
+                    {"code": "69", "esa_code": "4FRC", "esa_name": "Fraser Coast"},
+                    {"code": "70", "esa_code": "4GLA", "esa_name": "Gladstone"},
+                    {"code": "71", "esa_code": "4GOC", "esa_name": "Gold Coast"},
+                    {"code": "72", "esa_code": "4GYM", "esa_name": "Gympie"},
+                    {"code": "73", "esa_code": "4IPS", "esa_name": "Ipswich"},
+                    {"code": "74", "esa_code": "4LOG", "esa_name": "Logan"},
+                    {"code": "75", "esa_code": "4MAK", "esa_name": "Mackay"},
+                    {"code": "76", "esa_code": "4MTI", "esa_name": "Mt Isa"},
+                    {"code": "77", "esa_code": "4NOB", "esa_name": "North Brisbane"},
+                    {"code": "78", "esa_code": "4ONB", "esa_name": "Outer North Brisbane"},
+                    {"code": "79", "esa_code": "4SOB", "esa_name": "South Brisbane"},
+                    {"code": "80", "esa_code": "4SUC", "esa_name": "Sunshine Coast"},
+                    {"code": "81", "esa_code": "4TOO", "esa_name": "Toowoomba"},
+                    {"code": "82", "esa_code": "4TOW", "esa_name": "Townsville"},
+                    {"code": "83", "esa_code": "4WAR", "esa_name": "Warwick"},
+                    {"code": "84", "esa_code": "4WDO", "esa_name": "Western Downs"},
+                    {"code": "85", "esa_code": "4ADH", "esa_name": "Adelaide Hills"},
+                    {"code": "86", "esa_code": "4EAA", "esa_name": "Eastern Adelaide"},
+                    {"code": "87", "esa_code": "4FKI", "esa_name": "Fleurieu/Kangaroo Island"},
+                    {"code": "88", "esa_code": "4GAW", "esa_name": "Gawler"},
+                    {"code": "89", "esa_code": "4KAC", "esa_name": "Kadina/Clare"},
+                    {"code": "90", "esa_code": "4MUR", "esa_name": "Murraylands"},
+                    {"code": "91", "esa_code": "4NCO", "esa_name": "North Country"},
+                    {"code": "92", "esa_code": "4NOA", "esa_name": "Northern Adelaide"},
+                    {"code": "93", "esa_code": "4PLC", "esa_name": "Port Lincoln/Ceduna"},
+                    {"code": "94", "esa_code": "4POP", "esa_name": "Port Pirie"},
+                    {"code": "95", "esa_code": "4RIV", "esa_name": "Riverland"},
+                    {"code": "96", "esa_code": "4SEA", "esa_name": "South East"},
+                    {"code": "97", "esa_code": "4SOA", "esa_name": "Southern Adelaide"},
+                    {"code": "98", "esa_code": "4WEA", "esa_name": "Western Adelaide"},
+                    {"code": "99", "esa_code": "4CWM", "esa_name": "Central and West Metro"},
+                    {"code": "100", "esa_code": "4DAL", "esa_name": "Dale"},
+                    {"code": "101", "esa_code": "4EAM", "esa_name": "East Metro"},
+                    {"code": "102", "esa_code": "4GOE", "esa_name": "Goldfields/Esperance"},
+                    {"code": "103", "esa_code": "4KIM", "esa_name": "Kimberley"},
+                    {"code": "104", "esa_code": "4MWG", "esa_name": "Mid West and Gascoyne"},
+                    {"code": "105", "esa_code": "4MIW", "esa_name": "Midlands/Wheatbelt"},
+                    {"code": "106", "esa_code": "4NOM", "esa_name": "North Metro"},
+                    {"code": "107", "esa_code": "4PIL", "esa_name": "Pilbara"},
+                    {"code": "108", "esa_code": "4SOU", "esa_name": "Southern"},
+                    {"code": "109", "esa_code": "4HOB", "esa_name": "Hobart"},
+                    {"code": "110", "esa_code": "4LAU", "esa_name": "Launceston"},
+                    {"code": "111", "esa_code": "4WNW", "esa_name": "West and North West"},
+                    {"code": "112", "esa_code": "4ALS", "esa_name": "Alice Springs"},
+                    {"code": "113", "esa_code": "4DAR", "esa_name": "Darwin"},
+                    {"code": "114", "esa_code": "4KAT", "esa_name": "Katherine"},
+                    {"code": "115", "esa_code": "4TEC", "esa_name": "Tennant Creek"}
+                ]
+            });
+
+            for(var i = 0; i < $scope.occupations.length; i++) {
+                if($rootScope.selectedOccupationCode === $scope.occupations[i].abb) {
+                    $rootScope.selectedOccupationTitle = $scope.occupations[i].title;
+                }
+            }
+
+            for(var i = 0; i < $scope.esas.length; i++) {
+                if($rootScope.selectedRegionCode === $scope.esas[i].code) {
+                    $rootScope.selectedRegionTitle = $scope.esas[i].esa_name;
+                }
+            }
+
+            function changeOccupation(newOccupation) {
+                $rootScope.selectedOccupationCode = newOccupation;
+                $rootScope.regionsByOccupationData = [];
+                    for(var i = 0; i < jobflowswages.length; i++) {
+                        if($rootScope.selectedOccupationCode === jobflowswages[i].abb) {
+                        $rootScope.regionsByOccupationData.push(jobflowswages[i]);
+                        console.log($rootScope.selectedOccupationCode);
+                    }
+                }
+                app.run();
+            };
+
+            function changeRegion(newRegion) {
+                $rootScope.selectedRegionCode = newRegion;
+                $rootScope.occupationsByRegionData = [];
+                for(var i = 0; i < jobflowswages.length; i++) {
+                    if($rootScope.selectedRegionCode === jobflowswages[i].esa_code) {
+                        $rootScope.occupationsByRegionData.push(jobflowswages[i]);
+                        console.log($rootScope.occupationsByRegionData);
+                    }
+                }
+                app.run();
+            };
+
+            function getRegionsByOccupation() {
+                for (var i = 0; i < jobflowswages.length; i++) {
+                    if(jobflowswages[i] === $rootScope.selectedOccupationCode) {
+                        $rootScope.regionsByOccupationData.push(jobflowswages[i]);
+                    }
+                    console.log(jobflowswages[i]);
+                };
+            };
+
+            $scope.getRegionsByOccupation = getRegionsByOccupation;
+            $scope.changeOccupation = changeOccupation;
+            $scope.changeRegion = changeRegion;
+
+       }]);
+    </script>
+    <style>
+        input {
+            width: 120px;
+            margin-right: 10px;
+        }
+    </style>
+  </head>
+  <body ng-controller="BasicCenterController">
+      <div class="row banner">
+        <div class="col-md-8">
+            <h1>Jobs-n-Growth</h1>
+            <h2 class="tagline">A Graphic Representation of Occupation Demand by Type and Region</h2>
+        </div>
+        <div class="col-md-4">
+            <div id="logo">
+                &nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="bottom-buffer">
+    </div>
+    <div id="nav">
+        <div class="row">
+            <div class="col-md-3">
+                <ul class="occupation">
+                    <li class="title">Instructions</title>
+                    <li> <img src="images/instructions.png" width="252px" height="156px"/></li>
+                </ul>
+               
+            </div>
+            <div class="col-md-5">
+                <ul class="occupation">
+                    <li class="title">Occupation</li>
+                    <li>
+                        <input id = "occupation_text" type="text" name="" placeholder="Enter the occupation" />
+                    </li>
+                    <li class="listContainer">
+                    <ul id="occupation_list" class="list">
+                        <div ng-repeat="o in occupations">
+                            <div ng-if="o.abb === selectedOccupationCode">
+                                <li value="{{o.abb}}" class="selected" ng-click="changeOccupation('{{o.abb}}')">{{o.title}}</li>
+                            </div>	
+                            <div ng-if="o.abb != selectedOccupationCode">
+                                <li value="{{o.abb}}" ng-click="changeOccupation(o.abb)">{{o.title}}</li>
+                            </div>     
+                    </ul>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <ul class="region">
+                    <li class="title">Region</li>
+                    <li>
+                        <input id = "region_text" type="text" name="" placeholder="Enter the region" />
+                    </li>
+	                <li class="listContainer">
+	                <ul id="metros_list" class="list">
+	                    <div ng-repeat="esa in esas">
+                            <div ng-if="esa.code === selectedRegionCode">
+                                <li value="{{esa.code}}" class="selected">{{esa.esa_name}}</li>
+                            </div>
+                            <div ng-if="esa.code != selectedRegionCode">
+                                <li value="{{esa.code}}" ng-click="changeRegion(esa.code)">{{esa.esa_name}}</li>
+                            </div>    
+                    </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="bottom-buffer">
+</div>
+<div class="row">
+    <div class="col-md-12 occ">
+        <p>{{selectedOccupationTitle}}</p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="occ-title">Top locations for {{selectedOccupationTitle}}</h1>
+    </div>
+</div>
+<div class="row feed">
+    <div class="col-md-5">
+        <img src="images/linegraph.png" width="518px" height="480px"/>
+    </div>
+    <div class="col-md-7">
+        <!--<leaflet lf-center="australia" width="685px" height="480px"></leaflet>-->
+        <img src="images/map.png" width="685px" height="480px"/>
+    </div>
+</div>
+<div class="bottom-buffer">
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <h2 class="occ-title">Top Regions for {{selectedOccupationTitle}}</h2>
+        <table>
+            <tr>
+                <th>Region</th>
+                <th># of Jobs</th>
+                <th>Average Wages</th>
+            </tr>
+            <tr ng-repeat="item in regionsByOccupationData">
+                <td>{{item.esa_name}}</td>
+                <td>{{item.jobs}}</td>
+                <td>${{item.wages}}</td>
+            </tr>
+        </table>
+    </div>
+    <div class="col-md-6">
+        <h2 class="occ-title">Top Jobs for {{selectedRegionTitle}}</h2>
+        <table>
+            <tr>
+                <th>Region</th>
+                <th># of Jobs</th>
+                <th>Average Wages</th>
+            </tr>
+            <tr ng-repeat="item in occupationsByRegionData">
+                <td>{{item.title}}</td>
+                <td>{{item.jobs}}</td>
+                <td>${{item.wages}}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+<footer>
+    <p>An Open Government Data App | Powered by strong coffee</p>
+    <div class="bottom-buffer"></div>
+</footer>
+  </body>
+</html>

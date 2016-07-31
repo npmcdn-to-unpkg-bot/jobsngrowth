@@ -1,0 +1,59 @@
+html {
+    background-color: black;
+}
+
+body {
+    min-width: 65em;
+    max-width: 85em;
+    margin: 0 auto;
+    background-color: black;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+}
+
+.bottom-buffer {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.banner h1 {
+    font-weight: 800;
+}
+
+.banner h2 {
+    font-size: 1.2em;
+    margin: 0;
+    padding: 0;
+}
+
+.occ {
+    padding-top:5px;
+    background-color: #fe84fd;
+    font-weight: 600;
+    font-size: 1.2em;
+    line-height: 1.2em;
+}
+
+.occ-title {
+    color: #fe84fd;
+    font-weight: 600;
+}
+
+footer {
+    margin-top:20px;
+    text-align: center;
+    width: 100%;
+    font-size: 0.8em;
+}
+
+#logo {
+    height: 80px;
+    background-image: url("../images/logo.png");
+    background-repeat: no-repeat;
+    background-position: right bottom;
+}
+
+#map {
+    height: 500px;
+    width: 100%;
+}
